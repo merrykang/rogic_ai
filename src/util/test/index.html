@@ -277,9 +277,9 @@ class Camera {
 
 }
 
-/***********************
-결과 출력하는 핵심 함수들
-***********************/
+/**************
+핵심 함수
+***************/
 
 // 손 감지기(detector)를 생성하는 함수: 생성된 감지기는 설정된 옵션에 따라 손의 위치를 추정
 // handPoseDetection 패키지를 사용하여 MediaPipeHands 모델을 기반으로 감지기를 생성
@@ -375,38 +375,49 @@ async function landmarks() {
 /*
 연속적인 이미지에서 손 좌표 예측
 */
-// 핵심 함수
+// Key Functions
 async function runHandPose() {
   const video = document.getElementById('video');
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
 
-  // 비디오 너비, 높이를 캔버스 너비, 높이와 동일하게 설정 -> 그래야 비디오 화면 잘 나옴
+  // Set video width and height = canvas width and height -> to make the video screen will appear
   const videoWidth = video.videoWidth;
   const videoHeight = video.videoHeight;
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
 
   const model = await handpose.load();
-  console.log('model 잘 불러옴');
+  console.log('Model loading successful!');
 
   async function detectHand() {
+    // Initialization by frame: To prevent from accumulating
+    context.setTransform(1, 0, 0, 1, 0, 0);  
+
+    context.translate(50, 50);  // Move start position to (50, 50)
+
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     const predictions = await model.estimateHands(video);
-    console.log('predictions 설정 잘 됨');
+    console.log('Predictions saved successfully!');
+
+    context.setTransform(1, 0, 0, 1, 0, 0);  
 
     if (predictions.length > 0) {
       console.log(`Predictions: `, predictions);
       for (let i = 0; i < predictions.length; i++) {
         const keypoints = predictions[i].landmarks;
-        // Log hand keypoints.
         for (let j = 0; j < keypoints.length; j++) {
-          const [x, y, z] = keypoints[j];
-          console.log(`Keypoint ${j}: [${x}, ${y}, ${z}]`);
+          const [x, y] = keypoints[j];
+          // Apply the transformation to the keypoints.
+          const transformedX = x - 50;  // Move x by 50 from the original coordinate
+          const transformedY = y - 50;  // Move y by 50 from the original coordinate
+          console.log(`Keypoint ${j}: [${x}, ${y}]`);
+          // console.log(`Keypoint2 ${j}: [${transformedX}, ${transformedY}]`);  // For comparing
         }
       }
     }
 
+    
     // Request the next animation frame to create a loop
     animationFrameId = requestAnimationFrame(detectHand);
   }
