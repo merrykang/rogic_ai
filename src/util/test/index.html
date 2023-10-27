@@ -285,13 +285,12 @@ class Camera {
 // handPoseDetection 패키지를 사용하여 MediaPipeHands 모델을 기반으로 감지기를 생성
 async function createDetector() {
   const hands = handPoseDetection.SupportedModels.MediaPipeHands;
-
-  return handPoseDetection.createDetector(hands, {
+  const detector =  handPoseDetection.createDetector(hands, {
     runtime: 'tfjs',
     modelType: 'full', //or lite
-    maxHands: 1, // or 2~10
+    maxHands: 2, // or 2~10
   })
-
+  return detector;
 }
 
 // 비디오 프레임에서 손을 감지하고 결과를 시각화하는 함수
@@ -387,37 +386,52 @@ async function runHandPose() {
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
 
-  const model = await handpose.load();
-  console.log('Model loading successful!');
+  const detector = await createDetector();
+  console.log('Creating the detector successful!');
 
   async function detectHand() {
-    // Initialization by frame: To prevent from accumulating
-    context.setTransform(1, 0, 0, 1, 0, 0);  
-
-    context.translate(50, 50);  // Move start position to (50, 50)
 
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const predictions = await model.estimateHands(video);
+    const predictions = await detector.estimateHands(video);
+    console.log(predictions.length);
     console.log('Predictions saved successfully!');
-
-    context.setTransform(1, 0, 0, 1, 0, 0);  
 
     if (predictions.length > 0) {
       console.log(`Predictions: `, predictions);
       for (let i = 0; i < predictions.length; i++) {
-        const keypoints = predictions[i].landmarks;
+        const handedness = predictions[i].handedness;
+        const keypoints = predictions[i].keypoints;
+
+        if (handedness === 'Left') {
+          console.log('Left hand keypoints:');
+        } else if (handedness === 'Right') {
+          console.log('Right hand keypoints:');
+        }
+
         for (let j = 0; j < keypoints.length; j++) {
-          const [x, y] = keypoints[j];
-          // Apply the transformation to the keypoints.
-          const transformedX = x - 50;  // Move x by 50 from the original coordinate
-          const transformedY = y - 50;  // Move y by 50 from the original coordinate
+          let x = keypoints[j].x;
+          let y = keypoints[j].y;
+          
+          // Reset the axis to match the Rogic axis
+          if (x>=320 & y>=240) {  // The first quadrant
+            x = Math.abs(x-320);
+            y = Math.abs(y-240);
+          } else if (x<320 & y>=240) { // The second quadrant
+            x = -Math.abs(x-320);
+            y = Math.abs(y-240);
+          } else if (x<320 & y<240) { // The third quadrant
+            x = -Math.abs(x-320);
+            y = -Math.abs(y-240);
+          } else { // The fourth quadrant
+            x = Math.abs(x-320);
+            y = -Math.abs(y-240);
+          }
+
           console.log(`Keypoint ${j}: [${x}, ${y}]`);
-          // console.log(`Keypoint2 ${j}: [${transformedX}, ${transformedY}]`);  // For comparing
+          
         }
       }
     }
-
-    
     // Request the next animation frame to create a loop
     animationFrameId = requestAnimationFrame(detectHand);
   }
