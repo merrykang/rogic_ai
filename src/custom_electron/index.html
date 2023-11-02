@@ -1,0 +1,28 @@
+<div id="main">
+    <div class="container">
+      <div class="canvas-wrapper">
+        <canvas id="output"></canvas> 
+        <video id="video" playsinline="" style="-webkit-transform: scaleX(-1); transform: scaleX(-1); visibility: hidden; width: auto; height: auto;"></video>
+      </div>
+      <!--연속적 이미지 손 좌표 예측-->
+      <button onclick="HandposeDetector.runHandPose()">Start Video</button>
+      <button onclick="HandposeDetector.stopVideo()">Stop Video</button>
+      <!--1개 이미지 손 좌표 예측-->
+      <!--<button onclick="landmarks()">Capture Frame and Run Hand Pose Prediction</button>-->
+    </div>
+  </div>
+  
+<!-- the peer dependencies of hand-pose-detection. -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+<!-- You must explicitly require a TF.js backend if you're not using the TF.js union bundle. -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+
+<!--Core packages-->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection"></script>
+<!--<script src="https://unpkg.com/@tensorflow-models/handpose@0.0.6/dist/handpose.js"></script>-->
+<!--For conversion : object -> Tensor-->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>  
+
+<!--Core source code-->
+<script src="./detector-handpose.js"></script>

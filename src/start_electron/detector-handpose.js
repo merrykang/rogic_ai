@@ -16,9 +16,7 @@
   */
 
 // 변수 설정 
-let detector, camera, stats;
-let startInferenceTime, numInferences = 0;
-let inferenceTimeSum = 0, lastPanelUpdate = 0;
+let detector, camera;
 let animationFrameId  // 버튼 클릭하면 좌표 예측 멈추도록 변수 설정
 
 // 손 키포인트 매칭(딕셔너리)
