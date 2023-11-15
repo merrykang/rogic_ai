@@ -1,12 +1,31 @@
-//require('tracking'); // brings different computer vision algorithms and techniques into the browser environment.
+/**
+ * IO handler 타입으로 모델 로드 해보기
+ * - 
+ * - 
+ */
+
+// import Libraries
 const Detector = require('./detector');
 const Camera = require('./handpose-camera');
 const camera = new Camera();
+
+require('@mediapipe/hands')
+const tf = require('@tensorflow/tfjs')
+tf.setBackend('webgl')
+require('@tensorflow/tfjs-converter')
+require('@tensorflow/tfjs-core')
+const { createDetector, HandDetector, MediaPipeHandsMediaPipeEstimationConfig,
+    MediaPipeHandsMediaPipeModelConfig, MediaPipeHandsModelType, MediaPipeHandsTfjsEstimationConfig,
+    MediaPipeHandsTfjsModelConfig, Keypoint, SupportedModels,
+    HandDetectorInput, Hand, ModelConfig, EstimationConfig}  = require('@tensorflow-models/hand-pose-detection')
+
+const HandposeHandler = require('./handpose-handler');
 
 // 변수 설정 
 let detector;
 let animationFrameId;  // 버튼 클릭하면 좌표 예측 멈추도록 변수 설정
 let rafId;
+
 
 class HandposeDetector extends Detector {
     constructor () {
@@ -15,13 +34,17 @@ class HandposeDetector extends Detector {
 
     // 손 감지기(detector)를 생성하는 함수: 생성된 감지기는 설정된 옵션에 따라 손의 위치를 추정
     // handPoseDetection 패키지를 사용하여 MediaPipeHands 모델을 기반으로 감지기를 생성
-    static async createDetector() {
-        const hands = handPoseDetection.SupportedModels.MediaPipeHands;
-        const detector =  handPoseDetection.createDetector(hands, {
+    static async _createDetector() {        
+        const hands = SupportedModels.MediaPipeHands;
+        console.log('hands: ', hands);
+        const detector =  createDetector(hands, {
         runtime: 'tfjs',
-        modelType: 'full', //or lite
-        maxHands: 2, // or 2~10
+        modelType: 'lite', //or lite
+        maxHands: 2, // or 2~10.
+        detectorModelUrl: './tensorflow-models/tfjs-model_handpose_3d_detector_lite_1/model.json',
+        landmarkModelUrl: './tensorflow-models/tfjs-model_handpose_3d_landmark_lite_1/model.json'
         })
+        console.log('detector: ', detector);
         return detector;
     }
     
@@ -88,7 +111,6 @@ class HandposeDetector extends Detector {
     } //disable
 
     static captureImageData(video) {
-        // const video = document.getElementById('video');
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         canvas.width = video.videoWidth;  // Set video width and height = canvas width and height -> to make the video screen will appear
@@ -105,6 +127,11 @@ class HandposeDetector extends Detector {
             const video = document.getElementById('video');
             const imageData = HandposeDetector.captureImageData(video);
             console.log('imageData2:', imageData);
+
+            // 모델 실험
+            // model.signature.inputs.input_1 = imageData;
+            // console.log('inputs: ', model.signature);
+
 
             return new Promise((resolve, reject) => {
                 detector.estimateHands(imageData)
@@ -179,6 +206,7 @@ class HandposeDetector extends Detector {
 
     // Detect the hand from the webcam | Estimate the position of the hand
     static async runHandPose() {
+        
         const handposeDetector = new HandposeDetector();
 
         // Detect the hand from the webcam
@@ -187,7 +215,7 @@ class HandposeDetector extends Detector {
         console.log('imageData2:', imageData);
 
         // Create detector
-        const detector = await HandposeDetector.createDetector();
+        const detector = await HandposeDetector._createDetector();
         console.log('Creating the detector successful!');
 
         // Estimate the position of the hand
@@ -205,9 +233,20 @@ class HandposeDetector extends Detector {
     // 코드 실행 
     async function app() {
         try {
+            // 모델 확인
+            // console.log('signature: ', model.signature);
+            // console.log('convertedBy: ', model.convertedBy);
+            // console.log('format: ', model.format);
+            // console.log('modelTopology: ', model.modelTopology);
+            // console.log('weightsManifest: ', model.weightsManifest)
+
+            // 
+
+
+
             const camera = await Camera.setupCamera();
             console.log(tf.getBackend());
-            detector = await HandposeDetector.createDetector();
+            detector = await HandposeDetector._createDetector();
             console.log(tf.getBackend());
             HandposeDetector.renderPrediction();
         } catch (error) {
