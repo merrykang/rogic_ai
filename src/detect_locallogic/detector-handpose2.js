@@ -1,5 +1,8 @@
 /**
- * 맨 처음 일렉트론 테스트 성공시킨 파일
+ * 모델 로드 성공
+ *  - npm + require -> createDetector 함수에서 detectorModelUrl에 모델이 위치한 상대 경로 적어줌
+ *  - 이 코드 기반으로 로컬 로직에서도 모델 로드 성공 
+ *  -  
  */
 
 // import Libraries
@@ -7,7 +10,13 @@ const Detector = require('./detector');
 const Camera = require('./handpose-camera');
 const camera = new Camera();
 
+require('@mediapipe/hands')
+const tf = require('@tensorflow/tfjs')
+tf.setBackend('webgl')
+require('@tensorflow/tfjs-converter')
+require('@tensorflow/tfjs-core')
 const { createDetector, SupportedModels }  = require('@tensorflow-models/hand-pose-detection')
+
 
 // 변수 설정 
 let detector;
@@ -22,13 +31,15 @@ class HandposeDetector extends Detector {
 
     // 손 감지기(detector)를 생성하는 함수: 생성된 감지기는 설정된 옵션에 따라 손의 위치를 추정
     // handPoseDetection 패키지를 사용하여 MediaPipeHands 모델을 기반으로 감지기를 생성
-    static async _createDetector() {
+    static async _createDetector() {        
         const hands = SupportedModels.MediaPipeHands;
         console.log('hands: ', hands);
         const detector =  createDetector(hands, {
         runtime: 'tfjs',
-        modelType: 'full', //or lite
-        maxHands: 2, // or 2~10
+        modelType: 'lite', //or lite
+        maxHands: 2, // or 2~10.
+        detectorModelUrl: './tensorflow-models/tfjs-model_handpose_3d_detector_lite_1/model.json',
+        landmarkModelUrl: './tensorflow-models/tfjs-model_handpose_3d_landmark_lite_1/model.json'
         })
         console.log('detector: ', detector);
         return detector;
@@ -114,11 +125,6 @@ class HandposeDetector extends Detector {
             const imageData = HandposeDetector.captureImageData(video);
             console.log('imageData2:', imageData);
 
-            // 모델 실험
-            // model.signature.inputs.input_1 = imageData;
-            // console.log('inputs: ', model.signature);
-
-
             return new Promise((resolve, reject) => {
                 detector.estimateHands(imageData)
                     .then((predictions) => {
@@ -185,10 +191,7 @@ class HandposeDetector extends Detector {
                 
     } //detect(imageData)
 
-    draw(canvas) {
-        if (!canvas || !this.isExistContent(this._result)) return canvas;
 
-    }
 
     // Detect the hand from the webcam | Estimate the position of the hand
     static async runHandPose() {
@@ -219,17 +222,6 @@ class HandposeDetector extends Detector {
     // 코드 실행 
     async function app() {
         try {
-            // 모델 확인
-            // console.log('signature: ', model.signature);
-            // console.log('convertedBy: ', model.convertedBy);
-            // console.log('format: ', model.format);
-            // console.log('modelTopology: ', model.modelTopology);
-            // console.log('weightsManifest: ', model.weightsManifest)
-
-            // 
-
-
-
             const camera = await Camera.setupCamera();
             console.log(tf.getBackend());
             detector = await HandposeDetector._createDetector();
