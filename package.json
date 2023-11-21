@@ -4,8 +4,11 @@
   "description": "(주) 로보로보에서 진행한 손 위치 좌표를 예측하는 ai 개발 프로젝트입니다.",
   "main": "main.js",
   "dependencies": {
+    "@mediapipe/face_detection": "^0.4.1646425229",
     "@mediapipe/hands": "^0.4.1675469240",
     "@mediapipe/tasks-vision": "^0.10.7",
+    "@tensorflow-models/face-detection": "^1.0.2",
+    "@tensorflow-models/face-landmarks-detection": "^1.0.5",
     "@tensorflow-models/hand-pose-detection": "^2.0.1",
     "@tensorflow/tfjs": "^4.13.0",
     "@tensorflow/tfjs-core": "^4.13.0",

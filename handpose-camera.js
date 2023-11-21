@@ -140,36 +140,6 @@ class Camera {
         this.drawKeypoints(hand.keypoints, hand.handedness);
         }
 }
-  
-    // x축을 기준으로 손의 키포인트를 사용하여 손가락의 상승 또는 하강 여부를 판단
-    // keypoints: 키포인트의 배열; is_up: 상승 여부를 나타내는 boolean 값
-    is_up_or_down(keypoints, is_up) {
-        const keypointsArray = keypoints;
-        // for x axis
-        const wrist = keypointsArray[0].x;
-        const index_finger_pip = keypointsArray[6].x;
-        const index_finger_tip = keypointsArray[8].x;
-        const ring_finger_pip = keypointsArray[14].x;
-        const ring_finger_tip = keypointsArray[16].x;
-
-        if (
-        (wrist > index_finger_pip
-            && index_finger_tip > index_finger_pip
-            && ring_finger_tip > ring_finger_pip)
-        || (wrist < index_finger_pip
-            && index_finger_tip < index_finger_pip
-            && ring_finger_tip < ring_finger_pip)) {
-        if (is_up == true) {
-            return 'up'
-        }
-        else {
-            return 'down'
-        }
-        }
-        else {
-        return 'none'
-        }
-  }
 
   /**
     * 손의 키포인트를 그리는 함수
