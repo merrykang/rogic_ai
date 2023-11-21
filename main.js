@@ -6,7 +6,7 @@ const createWindow = () => {
         // width: 640,
         //height: 480,
         webPreferences: { 
-            preload: path.join(__dirname, 'detector-face.js'),
+            preload: path.join(__dirname, 'detector-handpose2.js'),
             nodeIntegration: true,
             contextIsolation: false,
             //enableRemoteModule: true, 

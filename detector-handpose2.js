@@ -1,20 +1,14 @@
-/**
- * 모델 로드 성공
- *  - npm + require -> createDetector 함수에서 detectorModelUrl에 모델이 위치한 상대 경로 적어줌
- *  - 이 코드 기반으로 로컬 로직에서도 모델 로드, 키포인트 출력까지 성공 
- *  - draw_locallogic에서 비디오에 키포인트 그리는 것 구현할 계획
- */
 
 // import Libraries
 const Detector = require('./detector');
 const Camera = require('./handpose-camera');
 const camera = new Camera();
 
-require('@mediapipe/hands')
+// require('@mediapipe/hands')
 const tf = require('@tensorflow/tfjs')
 tf.setBackend('webgl')
-require('@tensorflow/tfjs-converter')
-require('@tensorflow/tfjs-core')
+// require('@tensorflow/tfjs-converter')
+// require('@tensorflow/tfjs-core')
 const { createDetector, SupportedModels }  = require('@tensorflow-models/hand-pose-detection')
 
 

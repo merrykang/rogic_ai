@@ -87,60 +87,60 @@ class Camera {
     /**
      * draw(canvas) 관련 함수들
      */
-    function drawPath(ctx, points, closePath) {
-        const region = new Path2D();
-        region.moveTo(points[0][0], points[0][1]);
-        for (let i = 1; i < points.length; i++) {
-          const point = points[i];
-          region.lineTo(point[0], point[1]);
-        }
+//     function drawPath(ctx, points, closePath) {
+//         const region = new Path2D();
+//         region.moveTo(points[0][0], points[0][1]);
+//         for (let i = 1; i < points.length; i++) {
+//           const point = points[i];
+//           region.lineTo(point[0], point[1]);
+//         }
       
-        if (closePath) {
-          region.closePath();
-        }
-        ctx.stroke(region);
-      }
+//         if (closePath) {
+//           region.closePath();
+//         }
+//         ctx.stroke(region);
+//       }
       
-      /**
-       * Draw the keypoints on the video.
-       * @param ctx 2D rendering context.
-       * @param faces A list of faces to render.
-       * @param boundingBox Whether or not to display the bounding box.
-       * @param showKeypoints Whether or not to display the keypoints.
-       */
-      export function drawResults(ctx, faces, boundingBox, showKeypoints) {
-        faces.forEach((face) => {
-          const keypoints =
-              face.keypoints.map((keypoint) => [keypoint.x, keypoint.y]);
+//       /**
+//        * Draw the keypoints on the video.
+//        * @param ctx 2D rendering context.
+//        * @param faces A list of faces to render.
+//        * @param boundingBox Whether or not to display the bounding box.
+//        * @param showKeypoints Whether or not to display the keypoints.
+//        */
+//       export function drawResults(ctx, faces, boundingBox, showKeypoints) {
+//         faces.forEach((face) => {
+//           const keypoints =
+//               face.keypoints.map((keypoint) => [keypoint.x, keypoint.y]);
       
-          if (boundingBox) {
-            ctx.strokeStyle = RED;
-            ctx.lineWidth = 1;
+//           if (boundingBox) {
+//             ctx.strokeStyle = RED;
+//             ctx.lineWidth = 1;
       
-            const box = face.box;
-            drawPath(
-                ctx,
-                [
-                  [box.xMin, box.yMin], [box.xMax, box.yMin], [box.xMax, box.yMax],
-                  [box.xMin, box.yMax]
-                ],
-                true);
-          }
+//             const box = face.box;
+//             drawPath(
+//                 ctx,
+//                 [
+//                   [box.xMin, box.yMin], [box.xMax, box.yMin], [box.xMax, box.yMax],
+//                   [box.xMin, box.yMax]
+//                 ],
+//                 true);
+//           }
       
-          if (showKeypoints) {
-            ctx.fillStyle = GREEN;
+//           if (showKeypoints) {
+//             ctx.fillStyle = GREEN;
       
-            for (let i = 0; i < NUM_KEYPOINTS; i++) {
-              const x = keypoints[i][0];
-              const y = keypoints[i][1];
+//             for (let i = 0; i < NUM_KEYPOINTS; i++) {
+//               const x = keypoints[i][0];
+//               const y = keypoints[i][1];
       
-              ctx.beginPath();
-              ctx.arc(x, y, 3 /* radius */, 0, 2 * Math.PI);
-              ctx.fill();
-            }
-          }
-        });
-      }
+//               ctx.beginPath();
+//               ctx.arc(x, y, 3 /* radius */, 0, 2 * Math.PI);
+//               ctx.fill();
+//             }
+//           }
+//         });
+//       }
 }
 
 module.exports = Camera;
