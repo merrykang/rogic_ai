@@ -32,13 +32,14 @@ class HandposeDetector extends Detector {
         this._canvas = null;
     }
 
-    // 모델 로딩
     _createDetector() {
         const model = SupportedModels.MediaPipeHands;
         const detector = createDetector(model, {
             runtime: "tfjs",
             modelType: "lite",
             maxHands: 2, // or 2~10.
+            flipHorizontal: false,
+            staticImageMode: false,
             detectorModelUrl:
                 "/static/tensorflow-models/tfjs-model_handpose_3d_detector_lite_1/model.json",
             landmarkModelUrl:
@@ -72,50 +73,39 @@ class HandposeDetector extends Detector {
                 })
                 resolve(this._result);
             }).catch(e => {
-                console.error(e);
+                reject(e);
             });
         })
     }
 
     draw(canvas) {
         if (!canvas || !this.isExistContent(this._result)) return canvas;
+        const ctx = canvas.getContext("2d");
         this._result.forEach( (res) => {
-            this._drawKeypoints(canvas, res.keypoints, res.handedness);
+            ctx.fillStyle = res.handedness === "Left" ? "Red" : "Blue";
+            ctx.strokeStyle = "White";
+            ctx.lineWidth = 2;
+            res.keypoints.forEach(keypoint => {
+                this._drawPoint(ctx, keypoint.y - 2, keypoint.x - 2, 3);
+            });
+            Object.keys(fingerLookupIndices).forEach(finger => {
+                const points = fingerLookupIndices[finger].map(idx => res.keypoints[idx]);
+                this._drawPath(ctx, points, false);
+            });
         });
         return canvas;
     }
 
-    // 손의 키포인트 및 경로를 그리는 함수
-    _drawKeypoints(canvas, keypoints, handedness) {
-        const ctx = canvas.getContext("2d");
-        ctx.fillStyle = handedness === "Left" ? "Red" : "Blue";
-        ctx.strokeStyle = "White";
-        ctx.lineWidth = 2;
-
-        keypoints.forEach(keypoint => {
-            this._drawPoint(ctx, keypoint.y - 2, keypoint.x - 2, 3);
-        });
-
-        Object.keys(fingerLookupIndices).forEach(finger => {
-            const points = fingerLookupIndices[finger].map(idx => keypoints[idx]);
-            this._drawPath(canvas, points, false);
-        });
-    }
-
-    // 키포인트 간 경로를 그리는 함수
-    _drawPath(canvas, points, closePath) {
-        const ctx = canvas.getContext("2d");
+    _drawPath(ctx, points, closePath) {
         const region = new Path2D();
         region.moveTo(points[0].x, points[0].y);
         points.slice(1).forEach(point => region.lineTo(point.x, point.y));
- 
         if (closePath) {
             region.closePath();
         }
         ctx.stroke(region);
     }
 
-    // 키포인트(x, y 좌표를 중심으로 한 반지름 r의 원)을 그리는 함수
     _drawPoint(ctx, y, x, r) {
         ctx.beginPath();
         ctx.arc(x, y, r, 0, 2 * Math.PI);
