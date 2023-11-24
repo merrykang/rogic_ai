@@ -2,7 +2,7 @@ const {createDetector,SupportedModels} = require("@tensorflow-models/hand-pose-d
 const Detector = require("./detector");
 
 // 각 손가락을 폴리라인으로 렌더링
-const fingerLookupIndices = {
+const FINGER_INDICES = {
     thumb: [0, 1, 2, 3, 4],
     indexFinger: [0, 5, 6, 7, 8],
     middleFinger: [0, 9, 10, 11, 12],
@@ -81,19 +81,27 @@ class HandposeDetector extends Detector {
     draw(canvas) {
         if (!canvas || !this.isExistContent(this._result)) return canvas;
         const ctx = canvas.getContext("2d");
-        this._result.forEach( (res) => {
-            ctx.fillStyle = res.handedness === "Left" ? "Red" : "Blue";
-            ctx.strokeStyle = "White";
-            ctx.lineWidth = 2;
-            res.keypoints.forEach(keypoint => {
-                this._drawPoint(ctx, keypoint.y - 2, keypoint.x - 2, 3);
+        if (this._result) {
+            this._result.forEach( (res) => {
+                ctx.fillStyle = res.handedness === "Left" ? "Red" : "Blue";
+                ctx.strokeStyle = "White";
+                ctx.lineWidth = 2;
+                res.keypoints.forEach(keypoint => {
+                    this._drawKeypoint(ctx, keypoint);
+                });
+                Object.keys(FINGER_INDICES).forEach(finger => {
+                    const points = FINGER_INDICES[finger].map(idx => res.keypoints[idx]);
+                    this._drawPath(ctx, points, false);
+                });
             });
-            Object.keys(fingerLookupIndices).forEach(finger => {
-                const points = fingerLookupIndices[finger].map(idx => res.keypoints[idx]);
-                this._drawPath(ctx, points, false);
-            });
-        });
+        }
         return canvas;
+    }
+
+    _drawKeypoint(ctx, keypoint) {
+        ctx.beginPath();
+        ctx.arc(keypoint.x - 2, keypoint.y - 2, 3, 0, 2 * Math.PI);
+        ctx.fill();
     }
 
     _drawPath(ctx, points, closePath) {
@@ -104,12 +112,6 @@ class HandposeDetector extends Detector {
             region.closePath();
         }
         ctx.stroke(region);
-    }
-
-    _drawPoint(ctx, y, x, r) {
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, 2 * Math.PI);
-        ctx.fill();
     }
 }
 

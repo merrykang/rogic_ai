@@ -4,6 +4,8 @@ const Detector = require("./detector");
 var user = {};
 var faceMatcher = null;
 
+const MODEL = SupportedModels.MediaPipeFaceMesh;
+
 class FaceDetector extends Detector {
     constructor() {
         super();
@@ -119,8 +121,8 @@ class FaceDetector extends Detector {
     }
 
     _createDetector() {
-        const model = SupportedModels.MediaPipeFaceMesh;
-        const detector = createDetector(model, {
+        // const model = SupportedModels.MediaPipeFaceMesh;
+        const detector = createDetector(MODEL, {
             runtime: 'tfjs',
             maxFaces: 5,
             flipHorizontal: false,
@@ -164,32 +166,54 @@ class FaceDetector extends Detector {
     draw(canvas) {
         if (!canvas || !this.isExistContent(this._result)) return canvas;
         const ctx = canvas.getContext("2d");
-        this._result.forEach((res) => {
-            // Draw bounding box
-            if (res.box) {
-                ctx.strokeStyle = "Blue";
-                ctx.lineWidth = 3;
-                const box = res.box;
-                this._drawPath(
-                    ctx,
-                    [[box.xMin, box.yMin], [box.xMax, box.yMin], [box.xMax, box.yMax],[box.xMin, box.yMax]],
-                    true);
-            }
-            
-            // Draw nose
-            const keypoints = res.keypoints.map((keypoint) => [keypoint.x, keypoint.y]);
-            this._drawPoint(ctx, keypoints, [8, 168, 6, 197, 195, 5, 4, 19, 94, 2], "#ED5AB3");
-
-            // Draw other parts
-            const contours = util.getKeypointIndexByContour(SupportedModels.MediaPipeFaceMesh);
-            for (const [label, contour] of Object.entries(contours)) {
-                if (label !== 'leftIris' && label !== 'rightIris') {
-                    this._drawPoint(ctx, keypoints, contour, "#ED5AB3");
-                }          
-            }
-          });
+        if (this._result) {
+            this._result.forEach((res) => {
+                // Draw bounding box
+                if (res.box) {
+                    ctx.strokeStyle = "Blue";
+                    ctx.lineWidth = 3;
+                    const box = res.box;
+                    this._drawPath(
+                        ctx,
+                        [[box.xMin, box.yMin], [box.xMax, box.yMin], [box.xMax, box.yMax],[box.xMin, box.yMax]],
+                        true);
+                }
+                
+                // Draw nose
+                const keypoints = res.keypoints.map((keypoint) => [keypoint.x, keypoint.y]);
+                const noseIndices = [8, 168, 6, 197, 195, 5, 4, 19, 94, 2];
+                this._drawKeypoint(ctx, keypoints, noseIndices, "#ED5AB3");
+    
+                // Draw other parts
+                const contours = util.getKeypointIndexByContour(MODEL);
+                for (const [label, contour] of Object.entries(contours)) {
+                    if (label !== 'leftIris' && label !== 'rightIris') {
+                        this._drawKeypoint(ctx, keypoints, contour, "#ED5AB3");
+                    }          
+                }
+            });
+        }
         return canvas;
     }
+
+    _drawKeypoint(ctx, keypoints, indices, color) {
+        const points = indices.map((index) => keypoints[index]);
+        if (points.every(value => value != undefined)) {
+            ctx.fillStyle = color;
+            points.forEach(([x, y]) => {
+                ctx.beginPath();
+                ctx.arc(x, y, 3 /* radius */, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+            ctx.strokeStyle = '#45FFCA';  
+            ctx.lineWidth = 1.3;
+            this._drawPath(ctx, points, false);
+        }
+    }
+
+    // _distance(a, b) {
+    //     return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2));
+    // }
 
     _drawPath(ctx, points, closePath) {
         const region = new Path2D();
@@ -204,24 +228,7 @@ class FaceDetector extends Detector {
         ctx.stroke(region);
     }
 
-    _drawPoint(ctx, keypoints, indices, color) {
-        const path = indices.map((index) => keypoints[index]);
-        if (path.every(value => value != undefined)) {
-            ctx.fillStyle = color;
-            path.forEach(([x, y]) => {
-                ctx.beginPath();
-                ctx.arc(x, y, 3 /* radius */, 0, 2 * Math.PI);
-                ctx.fill();
-            });
-            ctx.strokeStyle = '#45FFCA';  
-            ctx.lineWidth = 1.3;
-            this._drawPath(ctx, path, false);
-        }
-    }
-
-    _distance(a, b) {
-        return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2));
-    }
+    
 
 }
 
