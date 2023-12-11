@@ -24,11 +24,32 @@ const ModuleType = {
 const FaceParts = {
     EYE_LEFT: 'leftEye',
     EYE_RIGHT: 'rightEye',
-    EYEBROW_LEFT: 'leftEyebrow',
-    EYEBROW_RIGHT: 'rightEyebrow',
+    EYEBROW_LEFT: 'leftEyeBrow',
+    EYEBROW_RIGHT: 'rightEyeBrow',
     NOSE: 'nose',
-    MOUTH: 'lips',
+    MOUTH: 'mouth',
     JAW: 'jaw'
+}
+
+// 추가 : hand-pose-detection
+const Handedness = {
+    LEFT: 'Left',
+    RIGHT: 'Right',
+    BOTH: 'Both'
+}
+
+const HandednessParts = {
+    LEFT: 'Left',
+    RIGHT: 'Right'
+}
+
+const HandposeParts = {
+    THUMB: 'thumb',
+    INDEX: 'index',
+    MIDDLE: 'middle',
+    RING: 'ring',
+    PINKY: 'pinky',
+    PALM: 'palm'
 }
 
 //const Expressions = {
@@ -217,6 +238,15 @@ class ImageProcessing {
                 }),
                 value: DetectionType.FACE
             },
+            // 추가 : hand-pose-detection
+            {
+                name: formatMessage({
+                    id: 'imageProcessing.type.handpose',
+                    default: '손 모양',
+                    description: '손 모양'
+                }),
+                value: DetectionType.HANDPOSE
+            },
             {
                 name: formatMessage({
                     id: 'imageProcessing.type.color',
@@ -290,6 +320,21 @@ class ImageProcessing {
         return FaceParts;
     }
 
+    /**
+     * 추가 : hand-pose-detection 
+     * */ 
+    static get Handedness () {
+        return Handedness;
+    }
+
+    static get HandednessParts() {
+        return HandednessParts;
+    }
+
+    static get HandposeParts () {
+        return HandposeParts;
+    }
+
     get FACE_PARTS () {
         return [
             {
@@ -347,6 +392,109 @@ class ImageProcessing {
                 }),
                 value: FaceParts.JAW
             }
+        ];
+    }
+
+    /**
+     * 추가 : hand-pose-detection 
+     * */ 
+    get HANDEDNESS() {
+        return [
+            {
+                name: formatMessage({
+                    id: 'imageProcessing.handpose.lefthandedness',
+                    default: '왼쪽',
+                    description: '왼쪽 손 모양'
+                }),
+                value: Handedness.LEFT
+            }, {
+                name: formatMessage({
+                    id: 'imageProcessing.handpose.righthandedness',
+                    default: '오른쪽',
+                    description: '오른쪽 손 모양'
+                }),
+                value: Handedness.RIGHT
+            },
+            {
+                name: formatMessage({
+                    id: 'imageProcessing.handpose.bothhandedness',
+                    default: '양쪽',
+                    description: '양쪽 손 모양'
+                }),
+                value: Handedness.BOTH
+            },
+        ];
+    }
+
+    get HANDEDNESS_PARTS() {
+        return [
+            {
+                name: formatMessage({
+                    id: 'imageProcessing.handpose.lefthandedness',
+                    default: '왼쪽',
+                    description: '왼쪽 손 모양'
+                }),
+                value: Handedness.LEFT
+            }, {
+                name: formatMessage({
+                    id: 'imageProcessing.handpose.righthandedness',
+                    default: '오른쪽',
+                    description: '오른쪽 손 모양'
+                }),
+                value: Handedness.RIGHT
+            },
+        ]
+    }
+
+    get HANDPOSE_PARTS() {
+        return [
+            {
+                name: formatMessage({
+                    id: 'imageProcessing.handpose.thumb',
+                    default: '엄지 손가락',
+                    description: '엄지 손가락'
+                }),
+                value: HandposeParts.THUMB
+            }, {
+                name: formatMessage({
+                    id: 'imageProcessing.handpose.index',
+                    default: '검지 손가락',
+                    description: '검지 손가락'
+                }),
+                value: HandposeParts.INDEX
+            },
+            {
+                name: formatMessage({
+                    id: 'imageProcessing.handpose.middle',
+                    default: '중지 손가락',
+                    description: '중지 손가락'
+                }),
+                value: HandposeParts.MIDDLE
+            },
+            {
+                name: formatMessage({
+                    id: 'imageProcessing.handpose.ring',
+                    default: '약지 손가락',
+                    description: '약지 손가락'
+                }),
+                value: HandposeParts.RING
+            },
+            {
+                name: formatMessage({
+                    id: 'imageProcessing.handpose.pinky',
+                    default: '새끼 손가락',
+                    description: '새끼 손가락'
+                }),
+                value: HandposeParts.PINKY
+            },
+            {
+                name: formatMessage({
+                    id: 'imageProcessing.handpose.palm',
+                    default: '손바닥',
+                    description: '손바닥'
+                }),
+                value: HandposeParts.PALM
+            },
         ];
     }
 
@@ -737,6 +885,93 @@ class ImageProcessing {
                 },
                 '---',
                 {
+                    opcode: 'isHandposeDetected',
+                    blockType: BlockType.BOOLEAN,
+                    text: formatMessage({
+                        id: 'imageProcessing.isHandposeDetected',
+                        default: '[HANDEDNESS] 손 모양이 감지 되었는가?',
+                        description: '사용자의 왼쪽, 오른쪽, 양쪽 손 모양의 감지 여부'
+                    }),
+                    arguments: {
+                        HANDEDNESS: {
+                            type: ArgumentType.STRING,
+                            menu: 'handedness',
+                            defaultValue: ImageProcessing.Handedness.BOTH
+                        }
+                    },
+                    color: Colours.sensing.primary,
+                    colorSecondary: Colours.sensing.secondary,
+                    colorTertiary: Colours.sensing.tertiary
+                },
+                {
+                    opcode: 'detectedHandposePositionX',
+                    blockType: BlockType.REPORTER,
+                    text: formatMessage({
+                        id: 'imageProcessing.detectedHandposePositionX',
+                        default: '[HANDEDNESS_PARTS] 손 모양의 [HANDPOSE_PARTS] 의 x 좌표',
+                        description: '사용자의 왼손 또는 오른손 모양 부위 x 좌표'
+                    }),
+                    arguments: {
+                        HANDEDNESS_PARTS: {
+                            type: ArgumentType.STRING,
+                            menu: 'handednessParts',
+                            defaultValue: ImageProcessing.HandednessParts.LEFT
+                        },
+                        HANDPOSE_PARTS: {
+                            type: ArgumentType.NUMBER,
+                            menu: 'handposeParts',
+                            defaultValue: ImageProcessing.HandposeParts.THUMB
+                        },
+                    },
+                    color: Colours.sensing.primary,
+                    colorSecondary: Colours.sensing.secondary,
+                    colorTertiary: Colours.sensing.tertiary
+                },
+                {
+                    opcode: 'detectedHandposePositionY',
+                    blockType: BlockType.REPORTER,
+                    text: formatMessage({
+                        id: 'imageProcessing.detectedHandposePositionY',
+                        default: '[HANDEDNESS_PARTS] 손 모양의 [HANDPOSE_PARTS] 의 y 좌표',
+                        description: '사용자의 왼손 또는 오른손 모양 부위 y 좌표'
+                    }),
+                    arguments: {
+                        HANDEDNESS_PARTS: {
+                            type: ArgumentType.STRING,
+                            menu: 'handednessParts',
+                            defaultValue: ImageProcessing.HandednessParts.LEFT
+                        },
+                        HANDPOSE_PARTS: {
+                            type: ArgumentType.NUMBER,
+                            menu: 'handposeParts',
+                            defaultValue: ImageProcessing.HandposeParts.THUMB
+                        },
+                    },
+                    color: Colours.sensing.primary,
+                    colorSecondary: Colours.sensing.secondary,
+                    colorTertiary: Colours.sensing.tertiary
+                },
+                {
+                    opcode: 'detectedHandposeSize',
+                    blockType: BlockType.REPORTER,
+                    text: formatMessage({
+                        id: 'imageProcessing.detectedHandposeSize',
+                        default: '[HANDEDNESS_PARTS] 손 모양의 크기',
+                        description: '사용자의 왼손 또는 오른손 모양 크기'
+                    }),
+                    arguments: {
+                        HANDEDNESS_PARTS: {
+                            type: ArgumentType.STRING,
+                            menu: 'handednessParts',
+                            defaultValue: ImageProcessing.HandednessParts.LEFT
+                        },
+                    },
+                    color: Colours.sensing.primary,
+                    colorSecondary: Colours.sensing.secondary,
+                    colorTertiary: Colours.sensing.tertiary
+                },
+                '---',
+                {
                     opcode: 'color',
                     blockType: BlockType.REPORTER,
                     text: '[COLOR]',
@@ -892,7 +1127,22 @@ class ImageProcessing {
                 className: {
                     acceptReporters: false,
                     items: this._buildMenu(this.CLASS_NAME)
-                }
+                },
+                /**
+                 * 추가 : hand-pose-detection 
+                 * */ 
+                handedness: {
+                    acceptReporters: false,
+                    items: this._buildMenu(this.HANDEDNESS),
+                },
+                handednessParts: {
+                    acceptReporters: false,
+                    items: this._buildMenu(this.HANDEDNESS_PARTS),
+                },
+                handposeParts: {
+                    acceptReporters: false,
+                    items: this._buildMenu(this.HANDPOSE_PARTS),
+                },
             }
         };
     }
@@ -1052,20 +1302,27 @@ class ImageProcessing {
         return qr ? qr.data : '';
     }
 
-    /**
-     * 수정 : face-landmarks-detection
-     */
     detectedFaceLength (args) {
         const faces = this.detectorManager.detectedResult(DetectionType.FACE);
         return faces ? faces.length : 0;
     }
 
-    isFaceDetected(args) {
+    isFaceDetected (args) {
         const faces = this.detectorManager.detectedResult(DetectionType.FACE);
         if (!faces) return false;
-    
+
         const id = args.USER_NAME;
-        return id === 'any' ? faces.length > 0 : faces.some(face => face.id === id);
+
+        if (id === 'any') {
+            return (faces.length > 0);
+        } else {
+            for (let i = 0; i < faces.length; i++) {
+                if (faces[i].id === id) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     detectedFacePositionX (args) {
@@ -1080,47 +1337,53 @@ class ImageProcessing {
         const face = this._targetFace(args.USER_NAME);
         if (!face) return 0;
 
-        const [jaw1, jaw2] = [face.keypoints[234], face.keypoints[454]];  // face oval 중 가장 왼쪽 바깥, 가장 오른쪽 바깥
-        const [disX, disY] = [jaw1.x - jaw2.x, jaw1.y - jaw2.y];
+        const jaw1 = face.detection.landmarks.getJawOutline()[0];
+        const jaw2 = face.detection.landmarks.getJawOutline()[16];
 
-        return Math.hypot(disX, disY);
+        const disX = jaw1.x - jaw2.x;
+        const disY = jaw1.y - jaw2.y;
+
+        return Math.sqrt(Math.abs(disX * disX) + Math.abs(disY * disY));
     }
 
     _targetFacePartsPosition (id, type) {
         const face = this._targetFace(id);
         const ret = {x: 0, y: 0};
         if (!face) return ret;
-        let partPoint = null;
-        const noseIndices = [8, 168, 6, 197, 195, 5, 4, 19, 94, 2];
 
-        face.keypoints.forEach((keypoint, i) => {
-            switch (type) {
-                case 'leftEye':
-                case 'rightEye':
-                case 'leftEyebrow':
-                case 'rightEyebrow':
-                case 'lips':
-                    if (keypoint.name === type) {
-                        partPoint = this._getPartPoint(keypoint, partPoint);
-                    }
-                    break;
-                case 'nose':
-                    if (noseIndices.includes(i)) { 
-                        partPoint = this._getPartPoint(keypoint, partPoint);
-                    }
-                    break; 
-                case 'jaw':
-                    if (i === 152) {
-                        partPoint = this._getPartPoint(keypoint, partPoint);
-                    }
-                    break;
-            }
-        });
-        
+        const landmark = face.detection.landmarks;
+        let partPoint = null;
+        switch (type) {
+            case 'leftEye': {
+                const sum = landmark.getLeftEye()[0].add(landmark.getLeftEye()[3]);
+                partPoint = {x: sum.x * 0.5, y: sum.y * 0.5};
+            } break;
+            case 'rightEye': {
+                const sum = landmark.getRightEye()[0].add(landmark.getRightEye()[3]);
+                partPoint = {x: sum.x * 0.5, y: sum.y * 0.5};
+            } break;
+            case 'leftEyeBrow':
+                partPoint = landmark.getLeftEyeBrow()[2];
+                break;
+            case 'rightEyeBrow':
+                partPoint = landmark.getRightEyeBrow()[2];
+                break;
+            case 'nose':
+                partPoint = landmark.getNose()[3];
+                break;
+            case 'mouth':
+                const sum = landmark.getMouth()[14].add(landmark.getMouth()[18]);
+                partPoint = {x: sum.x * 0.5, y: sum.y * 0.5};
+                break;
+            case 'jaw':
+                partPoint = landmark.getJawOutline()[8];
+                break;
+        }
+
         if (partPoint) {
             const dimensions = Camera.DIMENSIONS;
-            ret.x = partPoint.x / partPoint.count - (dimensions[0] * 0.5);
-            ret.y = partPoint.y / partPoint.count - (dimensions[1] * 0.5);
+            ret.x = partPoint.x - (dimensions[0] * 0.5);
+            ret.y = (dimensions[1] * 0.5) - partPoint.y;
         }
         return ret;
     }
@@ -1129,17 +1392,79 @@ class ImageProcessing {
         const faces = this.detectorManager.detectedResult(DetectionType.FACE);
         if (!faces || faces.length == 0) return;
 
-        return id === 'any' ? faces[Math.floor(Math.random() * faces.length)] : faces.find(face => face.id === id);
+        if (id === 'any') {
+            const index = Math.floor(Math.random() * (faces.length - 1));
+            return faces[index];
+        } else {
+            for (let i = 0; i < faces.length; i++) {
+                if (id === faces[i].id) {
+                    return faces[i];
+                }
+            }
+        }
     }
 
-    _getPartPoint(keypoint, partPoint) {
-        if (!partPoint) {
-            partPoint = { x: 0, y: 0, count: 0 };
+    /**
+     * 추가 : hand-pose-detection 블럭 함수들 
+     */
+    isHandposeDetected(args) {
+        const handposes = this.detectorManager.detectedResult(DetectionType.HANDPOSE);
+        if (!handposes) return false;
+        // 왼손 또는 오른손 || 양손
+        return handposes.some(result => result.handedness === args.HANDEDNESS || (args.HANDEDNESS === 'Both' && handposes.length === 2));
+    }
+
+    detectedHandposePositionX(args) {
+        return this._targetHandposePartsPosition(args.HANDEDNESS_PARTS, args.HANDPOSE_PARTS).x;
+    }
+
+    detectedHandposePositionY(args) {
+        return this._targetHandposePartsPosition(args.HANDEDNESS_PARTS, args.HANDPOSE_PARTS).y;
+    }
+
+    detectedHandposeSize(args) {
+        const handpose = this._targetHandpose(args.HANDEDNESS_PARTS);  
+        if (!handpose) return 0;
+
+        // wrist, thumb_tip, middle_finger_tip, pinky_finger_tip
+        const [keypoint0, keypoint1, keypoint2, keypoint3] = handpose.filter((_, index) => [0, 4, 12, 20].includes(index));
+        const width = Math.hypot(keypoint3.x - keypoint1.x, keypoint3.y - keypoint1.y);
+        const height = Math.hypot(keypoint2.x - keypoint0.x, keypoint2.y - keypoint0.y);
+        
+        return (width + height) / 2;
+    }
+
+    _targetHandposePartsPosition(handedness, type) {
+        const handpose = this._targetHandpose(handedness);
+        const ret = { x: 0, y: 0 };
+        if (!handpose) return ret;
+
+        const isPalm = type === 'palm';
+        const targetKeypoints = isPalm ? handpose.filter((_, index) => [0, 9].includes(index)) : handpose.filter(keypoint => keypoint.name.startsWith(type));
+        console.log('targetKeypoints', targetKeypoints);
+        const partPoint = this._getPartPoint(targetKeypoints);
+        console.log('partPoint', partPoint);
+
+        if (partPoint) {
+            const dimensions = Camera.DIMENSIONS;
+            ret.x = partPoint.x / partPoint.count - (dimensions[0] * 0.5);
+            ret.y = partPoint.y / partPoint.count - (dimensions[1] * 0.5);
         }
-        partPoint.x += keypoint.x;
-        partPoint.y += keypoint.y;
-        partPoint.count++;
-        return partPoint;
+        return ret;
+    }
+
+    _targetHandpose (handedness) {
+        const handposes = this.detectorManager.detectedResult(DetectionType.HANDPOSE);
+        const keypoints = handposes && handposes.find(result => result.handedness === handedness);
+        console.log('keypoints: ', keypoints);
+        return keypoints ? keypoints.keypoints : null;
+    } 
+
+    _getPartPoint(keypoints) {
+        if (keypoints) {
+            const initialPartPoint = { x: 0, y: 0, count: 0 };
+            return keypoints.reduce((acc, {x, y}) => ({ x: acc.x + x, y: acc.y + y, count: acc.count + 1}), initialPartPoint);
+        }
     }
 
     color (args) {

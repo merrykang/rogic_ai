@@ -68,7 +68,6 @@ class FaceDetector extends Detector {
             const labelDescriptors = keys.map(key => new LabeledFaceDescriptors(key, user[key]))
             if (labelDescriptors) {
                 faceMatcher = !user || this.userList.length === 0 ? null : new FaceMatcher(labelDescriptors, FaceDetector.distance);
-                console.log('faceMatcher: ', faceMatcher)
             }
         } else {
             faceMatcher = null;
@@ -125,11 +124,12 @@ class FaceDetector extends Detector {
         return new Promise((resolve, reject) => {   
             this._detectFaces(imageData).then(detected => {
                 this._result = detected;
-                const keypointArray = this._result[0].keypoints.flatMap(keypoint => [keypoint.x, keypoint.y, keypoint.z])
-                const descriptor = new Float32Array(keypointArray);
-                const results = faceMatcher.findBestMatch(descriptor);
-                console.log('results: ', results)
-                this._result[0].id = results._label
+                if (faceMatcher) {
+                    const keypointArray = this._result[0].keypoints.flatMap(keypoint => [keypoint.x, keypoint.y, keypoint.z])
+                    const descriptor = new Float32Array(keypointArray);
+                    const results = faceMatcher.findBestMatch(descriptor);
+                    this._result[0].id = results._label
+                }
             })
             console.log(`this._result: `, this._result);
             resolve(this._result);
